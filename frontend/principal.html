@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Página Principal</title>
+
+</head>
+
+<body>
+
+<h1>Sistema de Cursos</h1>
+
+<hr>
+
+<h2 id="usuario"></h2>
+
+<br>
+
+<button onclick="abrirCursos()">
+
+Cadastro de Cursos
+
+</button>
+
+<br><br>
+
+<button onclick="abrirMatriculas()">
+
+Gestão de Matrículas
+
+</button>
+
+<br><br>
+
+<button onclick="logout()">
+
+Logout
+
+</button>
+
+<script>
+
+const usuario =
+
+JSON.parse(
+
+localStorage.getItem('usuario')
+
+);
+
+if(!usuario){
+
+    window.location.href='login.html';
+
+}
+
+document.getElementById('usuario').innerHTML=
+
+"Bem-vindo, "+usuario.nome;
+
+function abrirCursos(){
+
+    window.location.href='index.html';
+
+}
+
+function abrirMatriculas(){
+
+    window.location.href='matriculas.html';
+
+}
+
+function logout(){
+
+    localStorage.removeItem('usuario');
+
+    window.location.href='login.html';
+
+}
+
+</script>
+
+</body>
+
+</html>

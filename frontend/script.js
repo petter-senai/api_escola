@@ -1,78 +1,242 @@
-async function listarCursos(){
+const usuario = JSON.parse(localStorage.getItem("usuario"));
 
-    const resposta = await fetch('http://localhost:3025/cursos');
-    const cursos = await resposta.json();
+if(!usuario){
 
-    const lista = document.getElementById('lista');
-    lista.innerHTML='';
+    window.location.href="login.html";
 
-    cursos.forEach(curso => {
-        lista.innerHTML += `
-            <li>
-                ${curso.id} - ${curso.nome}
-                <button onclick="editarCurso(${curso.id}, '${curso.nome}')">Editar</button>
-                <button onclick="excluirCurso(${curso.id})">Excluir</button>
-            </li>
-        `;
-    });
 }
 
-//---------------------------------------------------------
-// CADASTRAR CURSO
-//---------------------------------------------------------
+listarCursos();
+
+async function listarCursos(){
+
+    const resposta =
+        await fetch('http://localhost:3025/cursos');
+
+    const cursos =
+        await resposta.json();
+
+    montarTabela(cursos);
+
+}
+
+
+function montarTabela(cursos){
+
+    const tabela =
+        document.getElementById('tabelaCursos');
+
+    tabela.innerHTML='';
+
+    cursos.forEach(curso=>{
+
+        tabela.innerHTML += `
+
+        <tr>
+
+            <td>${curso.id}</td>
+
+            <td>${curso.nome}</td>
+
+            <td>${curso.carga_horaria} h</td>
+
+            <td>${curso.vagas}</td>
+
+            <td>${curso.vagas_minimas}</td>
+
+            <td>
+
+                <button
+                    onclick="editarCurso(${curso.id})">
+
+                    Editar
+
+                </button>
+
+                <button
+                    onclick="excluirCurso(${curso.id})">
+
+                    Excluir
+
+                </button>
+
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+}   
 
 async function cadastrarCurso(){
 
-    // Obtém o valor digitado no campo "nome"
-    const nome = document.getElementById('nome').value;
-    
-    // Verifica se o campo está vazio
-    if(nome === ''){
-        // Exibe uma mensagem para o usuário
-        alert('Digite o nome do curso.');
+    const nome =
+        document.getElementById('nome').value;
 
-        // Encerra a função para evitar o envio da requisição
+    const carga_horaria =
+        document.getElementById('carga_horaria').value;
+
+    const vagas =
+        document.getElementById('vagas').value;
+
+    const vagas_minimas =
+        document.getElementById('vagas_minimas').value;
+
+    if(nome==''){
+
+        alert('Informe o nome.');
+
         return;
+
     }
 
-    // Envia uma requisição HTTP POST para a API
-    const resposta = await fetch('http://localhost:3025/cursos',{
+    if(carga_horaria==''){
 
-        // Define o método da requisição
-        method:'POST',
+        alert('Informe a carga horária.');
 
-        // Informa que os dados serão enviados em formato JSON
-        headers:{'Content-Type':'application/json'},
+        return;
 
-        // Converte o objeto JavaScript em uma string JSON
-        body:JSON.stringify({nome})
-    });
+    }
 
-    // Converte a resposta da API para um objeto JavaScript
-    const dados = await resposta.json();
+    if(vagas==''){
 
-    // Exibe a mensagem retornada pelo servidor
+        alert('Informe as vagas.');
+
+        return;
+
+    }
+
+    if(vagas_minimas==''){
+
+        alert('Informe as vagas mínimas.');
+
+        return;
+
+    }
+
+    const resposta =
+        await fetch(
+
+        'http://localhost:3025/cursos',
+
+        {
+
+            method:'POST',
+
+            headers:{
+
+                'Content-Type':'application/json'
+
+            },
+
+            body:JSON.stringify({
+
+                nome,
+
+                carga_horaria,
+
+                vagas,
+
+                vagas_minimas
+
+            })
+
+        }
+
+    );
+
+    const dados =
+        await resposta.json();
+
     alert(dados.mensagem);
 
-    // Limpa o campo de texto após o cadastro
-    document.getElementById('nome').value='';
+    limparCampos();
 
-    // Atualiza a lista de cursos exibida na tela
     listarCursos();
 
 }
 
-async function editarCurso(id , nomeAtual){
+async function editarCurso(id){
 
-    const novoNome = prompt('Digite o novo nome:', nomeAtual);
+    const resposta =
+        await fetch(
 
-    if(!novoNome) return;
+            `http://localhost:3025/cursos/${id}`
 
-    await fetch(`http://localhost:3025/cursos/${id}`,{
-        method:'PUT',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({nome:novoNome})
-    });
+        );
+
+    const curso =
+        await resposta.json();
+
+    const nome =
+        prompt('Nome',curso.nome);
+
+    if(nome==null) return;
+
+    const carga =
+        prompt(
+
+            'Carga Horária',
+
+            curso.carga_horaria
+
+        );
+
+    if(carga==null) return;
+
+    const vagas =
+        prompt(
+
+            'Quantidade de vagas',
+
+            curso.vagas
+
+        );
+
+    if(vagas==null) return;
+
+    const minimo =
+        prompt(
+
+            'Vagas mínimas',
+
+            curso.vagas_minimas
+
+        );
+
+    if(minimo==null) return;
+
+    await fetch(
+
+        `http://localhost:3025/cursos/${id}`,
+
+        {
+
+            method:'PUT',
+
+            headers:{
+
+                'Content-Type':'application/json'
+
+            },
+
+            body:JSON.stringify({
+
+                nome,
+
+                carga_horaria:carga,
+
+                vagas,
+
+                vagas_minimas:minimo
+
+            })
+
+        }
+
+    );
 
     listarCursos();
 
@@ -80,12 +244,38 @@ async function editarCurso(id , nomeAtual){
 
 async function excluirCurso(id){
 
-    if(!confirm('Deseja realmente excluir este curso?')) return;
+    const resposta = confirm(
 
-    await fetch(`http://localhost:3025/cursos/${id}`,{
-        method:'DELETE'
-    });
+        'Deseja excluir este curso?'
+
+    );
+
+    if(!resposta) return;
+
+    await fetch(
+
+        `http://localhost:3025/cursos/${id}`,
+
+        {
+
+            method:'DELETE'
+
+        }
+
+    );
 
     listarCursos();
+
+}
+
+function limparCampos(){
+
+    document.getElementById('nome').value='';
+
+    document.getElementById('carga_horaria').value='';
+
+    document.getElementById('vagas').value='';
+
+    document.getElementById('vagas_minimas').value='';
 
 }
