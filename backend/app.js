@@ -46,71 +46,256 @@ server.get('/cursos/:id' , (req, res) => {
 
 });
 
+//PESQUISAR CURSO POR NOME
+//http://localhost:3000/cursos/busca/node
+server.get('/cursos/busca/:nome',(req,res)=>{
 
-//Método HTTP: POST
-//CRIAR UM NOVO CURSO
-//localhost:3000/cursos
-//{ "name": "Curso de Python" }
-server.post('/cursos', (req, res)=> {
-    const { nome } = req.body;
+    connection.query(
 
-    const sql = 'INSERT INTO cursos (nome) VALUES (?)';
+        'SELECT * FROM cursos WHERE nome LIKE ?',
 
-    connection.query(sql, [nome], (erro,resultado) => {
+        ['%' + req.params.nome + '%'],
 
-        if (erro) {
-            return res.status(500).json({ erro:erro.message });
-                }
+        (erro,resultados)=>{
 
-        return res.json({
-            mensagem: 'Curso cadastrado com sucesso',
-            id: resultado.insertId,
-            nome: nome
-        });
-        });  
-});
+            if(erro){
+                return res.status(500).json({
+                    erro:erro.message
+                });
+            }
 
-//Método HTTP: PUT
-//ATUALIZAR UM CURSO
-//localhost:3000/cursos/0
-server.put('/cursos/:id', (req, res) => {
-    const { id } = req.params;
-    const { nome } = req.body;
+            res.json(resultados);
 
-    const sql = 'UPDATE cursos SET nome = ? WHERE id = ?';
-    connection.query(sql, [nome , id], (erro , resultado) => {
-
-    if (erro) {
-    return res.status(500).json({ erro:erro.message });
-    }
-
-    return res.json({
-            mensagem:'Curso atualizado com sucesso',
-            nome: nome,
-            id: id
-
-        });
-    });
-});
-
-//Método HTTP: DELETE
-//DELETAR UM CURSO
-//localhost:3000/cursos/1
-server.delete('/cursos/:id', (req, res) => {
-    const { id } = req.params;
-    const sql = 'DELETE FROM cursos WHERE id = ?';
-
-    connection.query(sql, [id] , (erro) => {
-
-        if (erro) {
-            return res.status(500).json({ erro:erro.message });
         }
 
-        return res.json({
-            mensagem:'Curso removido com sucesso',
-            id: id
-        });
-    });
+    );
+
+});
+
+//CADASTRAR CURSO
+server.post('/cursos',(req,res)=>{
+
+    const{
+
+        nome,
+        carga_horaria,
+        vagas,
+        vagas_minimas
+
+    } = req.body;
+
+
+    connection.query(
+
+        `
+
+        INSERT INTO cursos
+
+        (
+
+            nome,
+
+            carga_horaria,
+
+            vagas,
+
+            vagas_minimas
+
+        )
+
+        VALUES
+
+        (?,?,?,?)
+
+        `,
+
+        [
+
+            nome,
+
+            carga_horaria,
+
+            vagas,
+
+            vagas_minimas
+
+        ],
+
+        (erro,resultado)=>{
+
+            if(erro){
+
+                return res.status(500).json({
+                    erro:erro.message
+                });
+
+            }
+
+            res.json({
+
+                mensagem:'Curso cadastrado com sucesso!',
+
+                id:resultado.insertId
+
+            });
+
+        }
+
+    );
+
+});
+//EDITAR CURSO
+server.put('/cursos/:id',(req,res)=>{
+
+    const{
+
+        nome,
+        carga_horaria,
+        vagas,
+        vagas_minimas
+
+    } = req.body;
+
+    connection.query(
+
+        `
+
+        UPDATE cursos
+
+        SET
+
+            nome=?,
+
+            carga_horaria=?,
+
+            vagas=?,
+
+            vagas_minimas=?
+
+        WHERE id=?
+
+        `,
+
+        [
+
+            nome,
+
+            carga_horaria,
+
+            vagas,
+
+            vagas_minimas,
+
+            req.params.id
+
+        ],
+
+        (erro)=>{
+
+            if(erro){
+
+                return res.status(500).json({
+                    erro:erro.message
+                });
+
+            }
+
+            res.json({
+
+                mensagem:'Curso atualizado com sucesso.'
+
+            });
+
+        }
+
+    );
+
+});
+
+//EXCLUIR CURSO
+
+server.delete('/cursos/:id',(req,res)=>{
+
+    connection.query(
+
+        'DELETE FROM cursos WHERE id=?',
+
+        [req.params.id],
+
+        (erro)=>{
+
+            if(erro){
+
+                return res.status(500).json({
+                    erro:erro.message
+                });
+
+            }
+
+            res.json({
+
+                mensagem:'Curso removido com sucesso.'
+
+            });
+
+        }
+
+    );
+
+});
+
+//=========================================================
+// LOGIN
+//=========================================================
+
+server.post('/login',(req,res)=>{
+
+    const {login,senha} = req.body;
+
+    connection.query(
+
+        'SELECT * FROM usuarios WHERE login=? AND senha=?',
+
+        [login,senha],
+
+        (erro,resultados)=>{
+
+            if(erro){
+
+                return res.status(500).json({
+
+                    sucesso:false,
+
+                    mensagem:erro.message
+
+                });
+
+            }
+
+            if(resultados.length==0){
+
+                return res.json({
+
+                    sucesso:false,
+
+                    mensagem:'Login ou senha inválidos.'
+
+                });
+
+            }
+
+            res.json({
+
+                sucesso:true,
+
+                usuario:resultados[0]
+
+            });
+
+        }
+
+    );
+
 });
 
 const PORT = 3025
